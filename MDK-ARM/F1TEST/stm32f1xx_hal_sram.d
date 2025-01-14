@@ -21,7 +21,11 @@ f1test\stm32f1xx_hal_sram.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_e
 f1test\stm32f1xx_hal_sram.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_dma.h
 f1test\stm32f1xx_hal_sram.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_dma_ex.h
 f1test\stm32f1xx_hal_sram.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_cortex.h
+f1test\stm32f1xx_hal_sram.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_dac.h
+f1test\stm32f1xx_hal_sram.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_dac_ex.h
 f1test\stm32f1xx_hal_sram.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_flash.h
 f1test\stm32f1xx_hal_sram.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_flash_ex.h
 f1test\stm32f1xx_hal_sram.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pwr.h
+f1test\stm32f1xx_hal_sram.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim.h
+f1test\stm32f1xx_hal_sram.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h
 f1test\stm32f1xx_hal_sram.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h

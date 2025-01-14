@@ -1287,3 +1287,5 @@ void lcd_show_CN(uint16_t x, uint16_t y, char num, uint8_t size, uint16_t color)
 
 
 
+
+
