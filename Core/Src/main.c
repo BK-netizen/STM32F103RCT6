@@ -59,10 +59,12 @@
 /* USER CODE BEGIN PV */
 
 char RxBuffer[RXBUFFERSIZE];   //接收数据
+
 uint8_t aRxBuffer;			//接收中断缓冲
 uint8_t Uart1_Rx_Cnt = 0;		//接收缓冲计数
 uint8_t LED_Flag = 0;
 uint16_t SinWaveTable[300] = {0};
+uint16_t TriangleWaveTable[300] = {0};
 uint8_t key = 0;
 uint16_t N_POINTS = 600;    //一个周期300个点 
 uint32_t ARR = 0;           //自动重装载值
@@ -75,8 +77,9 @@ void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
 
 void SineWaveGen(uint32_t NPoints, float VMaxRange, uint16_t* SineWaveTable);
+void TriangleWaveGen(uint32_t NPoints, float VMaxRange, uint16_t* TriangleWaveTable);
 void display_sine_wave_on_lcd(void) ;
-void update_frequency(void);
+void display_triangle_wave_on_lcd(void) ;
 
 /* USER CODE END PFP */
 
@@ -121,14 +124,16 @@ int main(void)
   key_init();
   lcd_clear(WHITE);
   HAL_UART_Receive_IT(&huart1, (uint8_t *)&aRxBuffer, 1); 
-	SineWaveGen(300, 3.3, SinWaveTable);
-	HAL_TIM_Base_Start(&htim6);
-	HAL_DAC_Start_DMA(&hdac,DAC_CHANNEL_2,(uint32_t *)SinWaveTable,300,DAC_ALIGN_12B_R);
+//  SineWaveGen(300,1.1, SinWaveTable);
+//  TriangleWaveGen(300,1.1,TriangleWaveTable);
+//  display_triangle_wave_on_lcd();
+  HAL_TIM_Base_Start(&htim6);
+//  HAL_DAC_Start_DMA(&hdac,DAC_CHANNEL_2,(uint32_t *)SinWaveTable,300,DAC_ALIGN_12B_R);
 //	display_sine_wave_on_lcd();
 
 //	for (uint32_t i = 0; i < 300; i++)
 //  {
-//        printf("SineWaveTable[%d] = %u\r\n", i, SinWaveTable[i]);  // 打印数组索引和对应的值
+//        printf("TriangleWaveTable[%d] = %u\r\n", i, TriangleWaveTable[i]);  // 打印数组索引和对应的值
 //  }
   
   /* USER CODE END 2 */
@@ -140,61 +145,146 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-		key = key_scan(0);
-		if(key == 1)
-		{
-				if(VMaxRange < 3.3)
-				{
-						VMaxRange += 0.1;
-						lcd_clear(WHITE);					
-				}
-		}
-		if(key ==2)
-		{
-				if(VMaxRange > 0)
-				{
-						VMaxRange -= 0.1;
-						lcd_clear(WHITE);						
-				}
-		}
-		if(key ==3)
-		{
-		   if(currentFrequency < 10000.0f)  // 频率最大为10kHz
-      {
-           currentFrequency += 1000.0f;  // 增加1kHz
-					 N_POINTS *= 2;
-					 lcd_clear(WHITE);
-      }		
-		
-		}
-		 ARR = (HAL_RCC_GetPCLK2Freq() / (currentFrequency * 300)) -1;
-		__HAL_TIM_SET_AUTORELOAD(&htim6, ARR);
+     key = key_scan(0);
+//		if(key == 1)
+//		{
+//			if(VMaxRange < 3.3)
+//			{
+//					VMaxRange += 0.1;
+//				    if (VMaxRange > 3.3) 
+//					{
+//						VMaxRange = 3.3;  // 限制最大值为 3.3
+//					}
+//					lcd_clear(WHITE);					
+//			}
+//		}
+//		if(key ==2)
+//		{
+//			if(VMaxRange > 0)
+//			{
+//					VMaxRange -= 0.1;
+//					lcd_clear(WHITE);						
+//			}
+//		}
+//		if(key ==3)
+//		{
+//		    if(currentFrequency < 10000.0f)  // 频率最大为10kHz
+//		    {
+//                    currentFrequency += 1000.0f;  // 增加1kHz
+//					N_POINTS *= 2;
+//					lcd_clear(WHITE);
+//			}		
+//		
+//		}
+//		 ARR = (HAL_RCC_GetPCLK2Freq() / (currentFrequency * 300)) -1;
+//		__HAL_TIM_SET_AUTORELOAD(&htim6, ARR);
 		//printf("%d\r\n",ARR);
 //		printf("%.2f\r\n",VMaxRange);
 
-		SineWaveGen(300, VMaxRange, SinWaveTable);
+		//SineWaveGen(300, VMaxRange, SinWaveTable);
 		//lcd_clear(WHITE);
-		display_sine_wave_on_lcd();
-		lcd_show_string(20,20,30,20,24,"F ",BLACK);
-		lcd_show_num(45,20,currentFrequency/1000,2,24,BLACK);
-		lcd_show_string(85,20,30,20,24,"KHZ",BLACK);
-		lcd_show_string(20,45,30,20,24,"V ",BLACK);
-		lcd_show_num(45,45,VMaxRange,2,24,BLACK);
-		lcd_show_string(75,45,5,5,24,".",BLACK);
-		lcd_show_num(80,45,(int)(VMaxRange * 10) % 10,2,24,BLACK);
-		lcd_show_string(110,45,30,20,24,"V",BLACK);
+		//display_sine_wave_on_lcd();
+	  lcd_show_string(20,20,30,20,24,"F ",BLACK);
+//	  lcd_show_num(45,20,currentFrequency/1000,2,24,BLACK);
+	  lcd_show_string(85,20,30,20,24,"KHZ",BLACK);
+	  lcd_show_string(20,45,30,20,24,"V ",BLACK);
+//	  lcd_show_num(45,45,VMaxRange,2,24,BLACK);
+//	  lcd_show_string(75,45,5,5,24,".",BLACK);
+//	  lcd_show_num(80,45,(int)(VMaxRange * 10) % 10,2,24,BLACK);
+	  lcd_show_string(110,45,30,20,24,"V",BLACK);
 	  if(LED_Flag == 1)
-	  {
-			HAL_GPIO_WritePin(GPIOA,GPIO_PIN_8,GPIO_PIN_SET);
-//			SineWaveGen(300, VMaxRange, SinWaveTable);
-//			lcd_clear(WHITE);
-//			display_sine_wave_on_lcd();
-//			lcd_show_string(20,20,20,20,24,"F",BLACK);
+	  {    
+		    HAL_DAC_Stop_DMA(&hdac,DAC_CHANNEL_2);
+			if(key == 1)
+			{
+				if(VMaxRange < 3.3)
+				{
+					VMaxRange += 0.1;
+				    if (VMaxRange > 3.3) 
+					{
+						VMaxRange = 3.3;  // 限制最大值为 3.3
+					}
+					lcd_clear(WHITE);					
+				}	
+			}
+			if(key ==2)
+			{
+				if(VMaxRange > 0)
+				{
+					VMaxRange -= 0.1;
+					lcd_clear(WHITE);						
+				}
+			}
+			if(key ==3)
+			{
+				if(currentFrequency < 10000.0f)  // 频率最大为10kHz
+				{
+                    currentFrequency += 1000.0f;  // 增加1kHz
+					N_POINTS *= 2;
+					lcd_clear(WHITE);
+				}		
+			
+			}
+			ARR = (HAL_RCC_GetPCLK2Freq() / (currentFrequency * 300)) -1;
+			__HAL_TIM_SET_AUTORELOAD(&htim6, ARR);
+			SineWaveGen(300, VMaxRange, SinWaveTable);
+			HAL_DAC_Start_DMA(&hdac,DAC_CHANNEL_2,(uint32_t *)SinWaveTable,300,DAC_ALIGN_12B_R);
+			//lcd_clear(WHITE);
+		    lcd_show_num(45,20,currentFrequency/1000,2,24,BLACK);
+			lcd_show_num(45,45,VMaxRange,2,24,BLACK);
+			lcd_show_string(75,45,5,5,24,".",BLACK);
+			lcd_show_num(80,45,(int)(VMaxRange * 10) % 10,2,24,BLACK);
+			lcd_show_string(45,270,30,20,24,"Sin",BLACK);
+			display_sine_wave_on_lcd();
 	  }
 	  else if(LED_Flag == 2)
 	  {
-			HAL_GPIO_WritePin(GPIOA,GPIO_PIN_8,GPIO_PIN_RESET);
+		    
+		  //HAL_GPIO_WritePin(GPIOA,GPIO_PIN_8,GPIO_PIN_RESET);
+		  if(key == 1)
+			{
+				if(VMaxRange < 3.3)
+				{
+					VMaxRange += 0.1;
+				    if (VMaxRange > 3.3) 
+					{
+						VMaxRange = 3.3;  // 限制最大值为 3.3
+					}
+					lcd_clear(WHITE);					
+				}	
+			}
+			if(key ==2)
+			{
+				if(VMaxRange > 0)
+				{
+					VMaxRange -= 0.1;
+					lcd_clear(WHITE);						
+				}
+			}
+			if(key ==3)
+			{
+				if(currentFrequency < 10000.0f)  // 频率最大为10kHz
+				{
+                    currentFrequency += 1000.0f;  // 增加1kHz
+					N_POINTS *= 2;
+					lcd_clear(WHITE);
+				}		
+			
+			}
+		  ARR = (HAL_RCC_GetPCLK2Freq() / (currentFrequency * 300)) -1;
+		  __HAL_TIM_SET_AUTORELOAD(&htim6, ARR);
+		  TriangleWaveGen(300, VMaxRange, TriangleWaveTable);
+		  HAL_DAC_Stop_DMA(&hdac,DAC_CHANNEL_2);
+		  HAL_DAC_Start_DMA(&hdac,DAC_CHANNEL_2,(uint32_t *)TriangleWaveTable,300,DAC_ALIGN_12B_R);
+		  lcd_show_num(45,20,currentFrequency/1000,2,24,BLACK);
+		  lcd_show_num(45,45,VMaxRange,2,24,BLACK);
+		  lcd_show_string(75,45,5,5,24,".",BLACK);
+		  lcd_show_num(80,45,(int)(VMaxRange * 10) % 10,2,24,BLACK);
+		  lcd_show_string(45,270,90,20,24,"Triangle",BLACK);
+		  display_triangle_wave_on_lcd();
 	  }
+
+
   }	
   /* USER CODE END 3 */
 }
@@ -253,6 +343,35 @@ void SineWaveGen(uint32_t NPoints, float VMaxRange, uint16_t* SineWaveTable)
         voltage = VMaxRange / 2.0 * (sin(radian) + 1.0);  // 计算电压
         SineWaveTable[i] = (uint16_t)(voltage * 4096 / 3.3);  // 电压转为DAC数值
         radian += setup;  // 下一个点的弧度
+        i++;
+    }
+}
+
+//产生三角波
+void TriangleWaveGen(uint32_t NPoints, float VMaxRange, uint16_t* TriangleWaveTable)
+{
+    int i = 0;
+//    double ramp_up = 0;    // 上升部分
+//    double ramp_down = 0;  // 下降部分
+    double voltage = 0;    // 输出电压
+
+    // 三角波的一半周期，假设波形在0到最大值之间线性变化，周期内分为上升和下降
+    int half_period = NPoints / 2;
+
+    while (i < NPoints)
+    {
+        // 上升部分
+        if (i < half_period) 
+        {
+            voltage = (VMaxRange / half_period) * i;  // 上升：线性从0到VMaxRange
+        }
+        // 下降部分
+        else
+        {
+            voltage = VMaxRange - ((VMaxRange / half_period) * (i - half_period));  // 下降：线性从VMaxRange到0
+        }
+
+        TriangleWaveTable[i] = (uint16_t)(voltage * 4096 / 3.3);  // 电压转为DAC数值
         i++;
     }
 }
@@ -327,6 +446,32 @@ void display_sine_wave_on_lcd(void)
         if (y >= SCREEN_HEIGHT) y = SCREEN_HEIGHT - 1;
 
         // 在LCD上绘制正弦波的每个点
+        lcd_draw_point(x, y, RED);  // 绘制点
+    }
+}
+
+//LCD显示三角波
+void display_triangle_wave_on_lcd(void) 
+{
+    uint16_t i;
+    int16_t x;  // 横坐标
+    int16_t y;  // 纵坐标
+    int16_t amplitude = 120;  // 调整幅度，避免超出屏幕宽度范围
+    int16_t offset_x = 120;   // 偏移量，使三角波在屏幕水平中心显示
+
+    // 遍历所有的三角波数据点并显示在LCD上
+    for (i = 0; i < N_POINTS; i++) {
+        // 将数据点映射到显示屏的垂直方向（幅值），y从0到SCREEN_HEIGHT
+        x = i * SCREEN_HEIGHT / N_POINTS;  // 映射到屏幕的高度
+
+        // 将DAC输出的数值映射到屏幕的水平方向（幅度）
+        y = (TriangleWaveTable[i % 300] * amplitude / 4096) + offset_x;  // 通过%300确保从第一个周期重复使用数据
+
+        // 防止超出屏幕范围
+        if (y < 0) x = 0;
+        if (y >= SCREEN_WIDTH) y = SCREEN_WIDTH - 1;
+
+        // 在LCD上绘制三角波的每个点
         lcd_draw_point(x, y, RED);  // 绘制点
     }
 }

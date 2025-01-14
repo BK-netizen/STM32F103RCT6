@@ -30,6 +30,6 @@
 "f1test\lcd.o"
 "f1test\key.o"
 --library_type=microlib --strict --scatter "F1TEST\F1TEST.sct"
---summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols
+--summary_stderr --info summarysizes --map --xref --callgraph --symbols
 --info sizes --info totals --info unused --info veneers
 --list "F1TEST.map" -o F1TEST\F1TEST.axf
