@@ -403,18 +403,22 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 			{
 				HAL_UART_Transmit(&huart1, (uint8_t *)&RxBuffer, Uart1_Rx_Cnt,0xFFFF); //将收到的信息发送出去
 				if (strncmp((char *)RxBuffer, "Z", 1) == 0)
-        {
+				{
                     
+					
 					LED_Flag = 1;
+					lcd_clear(WHITE);
 					
                     //HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET); // 点亮 LED
-        }
+				}
 				if (strncmp((char *)RxBuffer, "S", 1) == 0)
-        {
+				{
                     // 如果接收到 "task01"，点亮 LED
+					
 					LED_Flag = 2;
+					lcd_clear(WHITE);
                     //HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET); // 点亮 LED
-        }
+				}
 				//while(HAL_UART_GetState(&huart1) == HAL_UART_STATE_BUSY_TX);//检测UART发送结束
 				Uart1_Rx_Cnt = 0;
 				memset(RxBuffer,0x00,sizeof(RxBuffer)); //清空数组
