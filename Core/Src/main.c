@@ -68,6 +68,7 @@ uint16_t TriangleWaveTable[300] = {0};
 uint8_t key = 0;
 uint16_t N_POINTS = 600;    //一个周期300个点 
 uint32_t ARR = 0;           //自动重装载值
+uint8_t  pulse = 100;
 float VMaxRange = 3.3;
 float currentFrequency = 1000.0f;
 /* USER CODE END PV */
@@ -80,6 +81,8 @@ void SineWaveGen(uint32_t NPoints, float VMaxRange, uint16_t* SineWaveTable);
 void TriangleWaveGen(uint32_t NPoints, float VMaxRange, uint16_t* TriangleWaveTable);
 void display_sine_wave_on_lcd(void) ;
 void display_triangle_wave_on_lcd(void) ;
+void Display_SquareWave(void);
+
 
 /* USER CODE END PFP */
 
@@ -119,6 +122,7 @@ int main(void)
   MX_DMA_Init();
   MX_DAC_Init();
   MX_TIM6_Init();
+  MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
   lcd_init();
   key_init();
@@ -130,7 +134,6 @@ int main(void)
   HAL_TIM_Base_Start(&htim6);
 //  HAL_DAC_Start_DMA(&hdac,DAC_CHANNEL_2,(uint32_t *)SinWaveTable,300,DAC_ALIGN_12B_R);
 //	display_sine_wave_on_lcd();
-
 //	for (uint32_t i = 0; i < 300; i++)
 //  {
 //        printf("TriangleWaveTable[%d] = %u\r\n", i, TriangleWaveTable[i]);  // 打印数组索引和对应的值
@@ -188,13 +191,14 @@ int main(void)
 //	  lcd_show_num(45,20,currentFrequency/1000,2,24,BLACK);
 	  lcd_show_string(85,20,30,20,24,"KHZ",BLACK);
 	  lcd_show_string(20,45,30,20,24,"V ",BLACK);
+	  lcd_show_string(110,45,30,20,24,"V",BLACK);
+		lcd_show_string(20,70,80,20,24,"Pulse :",BLACK);
+		lcd_show_string(150,70,30,20,24,"%",BLACK);
 //	  lcd_show_num(45,45,VMaxRange,2,24,BLACK);
 //	  lcd_show_string(75,45,5,5,24,".",BLACK);
 //	  lcd_show_num(80,45,(int)(VMaxRange * 10) % 10,2,24,BLACK);
-	  lcd_show_string(110,45,30,20,24,"V",BLACK);
 	  if(LED_Flag == 1)
 	  {    
-		    HAL_DAC_Stop_DMA(&hdac,DAC_CHANNEL_2);
 			if(key == 1)
 			{
 				if(VMaxRange < 3.3)
@@ -228,6 +232,7 @@ int main(void)
 			ARR = (HAL_RCC_GetPCLK2Freq() / (currentFrequency * 300)) -1;
 			__HAL_TIM_SET_AUTORELOAD(&htim6, ARR);
 			SineWaveGen(300, VMaxRange, SinWaveTable);
+			HAL_DAC_Stop_DMA(&hdac,DAC_CHANNEL_2);
 			HAL_DAC_Start_DMA(&hdac,DAC_CHANNEL_2,(uint32_t *)SinWaveTable,300,DAC_ALIGN_12B_R);
 			//lcd_clear(WHITE);
 		    lcd_show_num(45,20,currentFrequency/1000,2,24,BLACK);
@@ -239,14 +244,13 @@ int main(void)
 	  }
 	  else if(LED_Flag == 2)
 	  {
-		    
 		  //HAL_GPIO_WritePin(GPIOA,GPIO_PIN_8,GPIO_PIN_RESET);
 		  if(key == 1)
 			{
 				if(VMaxRange < 3.3)
 				{
 					VMaxRange += 0.1;
-				    if (VMaxRange > 3.3) 
+				  if (VMaxRange > 3.3) 
 					{
 						VMaxRange = 3.3;  // 限制最大值为 3.3
 					}
@@ -282,6 +286,32 @@ int main(void)
 		  lcd_show_num(80,45,(int)(VMaxRange * 10) % 10,2,24,BLACK);
 		  lcd_show_string(45,270,90,20,24,"Triangle",BLACK);
 		  display_triangle_wave_on_lcd();
+	  }
+	  else if (LED_Flag == 3 )
+	  {
+			if(key == 1)
+			{
+				if(pulse < 200)
+				{
+					pulse += 1;
+					lcd_clear(WHITE);					
+				}	
+			}
+			if(key ==2)
+			{
+				if(pulse > 0)
+				{
+					pulse -= 1;
+					lcd_clear(WHITE);						
+				}
+			}
+			__HAL_TIM_SET_COUNTER(&htim2,pulse);
+			HAL_TIM_PWM_Start(&htim2,TIM_CHANNEL_2);  //PA1
+		  lcd_show_string(45,270,90,20,24,"PWM WARE",BLACK);
+
+			lcd_show_num(110,70,pulse,3,24,BLACK);
+			
+			Display_SquareWave();
 	  }
 
 
@@ -404,11 +434,9 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 				HAL_UART_Transmit(&huart1, (uint8_t *)&RxBuffer, Uart1_Rx_Cnt,0xFFFF); //将收到的信息发送出去
 				if (strncmp((char *)RxBuffer, "Z", 1) == 0)
 				{
-                    
-					
+                 
 					LED_Flag = 1;
 					lcd_clear(WHITE);
-					
                     //HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET); // 点亮 LED
 				}
 				if (strncmp((char *)RxBuffer, "S", 1) == 0)
@@ -416,6 +444,14 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
                     // 如果接收到 "task01"，点亮 LED
 					
 					LED_Flag = 2;
+					lcd_clear(WHITE);
+                    //HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET); // 点亮 LED
+				}
+				if (strncmp((char *)RxBuffer, "C", 1) == 0)
+				{
+                    // 如果接收到 "task01"，点亮 LED
+					
+					LED_Flag = 3;
 					lcd_clear(WHITE);
                     //HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET); // 点亮 LED
 				}
@@ -480,6 +516,65 @@ void display_triangle_wave_on_lcd(void)
     }
 }
 
+// 显示方波
+void Display_SquareWave(void)
+{
+
+    int amplitude = 50;  // 设置波形的幅度（屏幕的纵向大小）
+    int offset_y = 180;  // 垂直方向偏移量，用于将波形显示在屏幕中心
+
+    // 绘制第一个周期的方波
+    for (int i = 1; i < SCREEN_WIDTH/2; i++)  // 遍历屏幕宽度
+    {
+        int y;
+        if (i < (pulse * SCREEN_WIDTH / 200))  // 如果当前点在脉宽的部分
+        {
+            y = offset_y - amplitude;  // 高电平
+        }
+		else if(i  == (pulse * SCREEN_WIDTH / 200))
+		{
+			for(int k =130; k <230; k++)
+			{
+				lcd_draw_point(i, k, BLACK); 
+			}
+		}
+        else
+        {
+            y = offset_y + amplitude;  // 低电平
+        }
+        lcd_draw_point(i, y, RED);  // 绘制点
+    }
+	if(pulse != 0 && pulse !=100)
+	{
+		for(int k =130; k <230; k++)
+		{
+			lcd_draw_point(120, k, RED);
+			lcd_draw_point(1,k,RED);
+		}
+		
+	}
+	// 绘制第二个周期的方波
+    for (int i = 1; i < SCREEN_WIDTH/2; i++)  // 遍历屏幕宽度
+    {
+        int y;
+        if (i < (pulse * SCREEN_WIDTH / 200))  // 如果当前点在脉宽的部分
+        {
+            y = offset_y - amplitude;  // 高电平
+        }
+		else if(i  == (pulse * SCREEN_WIDTH / 200))
+		{
+			for(int k =130; k <230; k++)
+			{
+				lcd_draw_point(i+120, k, RED); 
+			}
+		}
+        else
+        {
+            y = offset_y + amplitude;  // 低电平
+        }
+        lcd_draw_point(i+120, y, RED);  // 绘制点
+    }
+}
 /* USER CODE END 4 */
 
 /**
